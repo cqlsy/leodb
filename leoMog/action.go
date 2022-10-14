@@ -1,4 +1,4 @@
-package mog
+package leoMog
 
 import (
 	"errors"
