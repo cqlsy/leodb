@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cqlsy/leodb/config"
+	conf2 "github.com/cqlsy/leodb/config"
 	"github.com/cqlsy/leolog"
 	"github.com/cqlsy/leoutil"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -18,7 +18,7 @@ import (
 
 type MongoDb struct {
 	db   *mongo.Database
-	conf *config.Info
+	conf *conf2.DBConf
 }
 
 type Col interface {
@@ -60,15 +60,15 @@ func (base BaseCol) GetFilterKey(data interface{}, key string) interface{} {
 	return value
 }
 
-func Connect(Conf *config.Info) (*MongoDb, error) {
+func Connect(Conf *conf2.DBConf) (*MongoDb, error) {
 	ctx, cancel := NewContext(2)
 	defer cancel()
 	mongoInfo := fmt.Sprintf("mongodb://%s:%s@%s:%s/%s",
-		Conf.Db.User,
-		url.QueryEscape(Conf.Db.Password),
-		Conf.Db.Host,
-		Conf.Db.Port,
-		Conf.Db.Db)
+		Conf.User,
+		url.QueryEscape(Conf.Password),
+		Conf.Host,
+		Conf.Port,
+		Conf.Db)
 	clientOpts := options.Client().ApplyURI(mongoInfo)
 	client, err := mongo.Connect(context.TODO(), clientOpts)
 	if err != nil {
@@ -79,7 +79,7 @@ func Connect(Conf *config.Info) (*MongoDb, error) {
 		return nil, err
 	}
 	db := new(MongoDb)
-	db.db = client.Database(Conf.Db.Db)
+	db.db = client.Database(Conf.Db)
 	leolog.Print("mongo connect success: " + mongoInfo)
 	return db, nil //
 }

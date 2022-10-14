@@ -21,22 +21,41 @@ func (db *MongoDb) InsertOne(colName string, document Col) (string, error) {
 }
 
 /**
+*  Update all data with this item
  */
 func (db *MongoDb) UpdateOne(colName string, document Col, filterKey string) error {
 	ctx, cancel := NewContextDEfault()
 	defer cancel()
-	if len(filterKey) == 0 {
+	if len(filterKey) == 0 || filterKey == "" {
 		return errors.New("UpdateOne Must has more than one filterKey")
 	}
 	filter := bson.D{}
-	if len(filterKey) > 0 {
-		str := document.GetFilterKey(document, filterKey)
-		filter = bson.D{{filterKey, str}}
-	}
+	str := document.GetFilterKey(document, filterKey)
+	filter = bson.D{{filterKey, str}}
 	update := bson.D{{"$set", document}}
 	updateOpts := options.Update().SetUpsert(true)
 	_, err := db.db.Collection(colName).UpdateOne(ctx, filter, update, updateOpts)
 	return err
+}
+
+/**
+*	 Update with the GetData
+ */
+func (db *MongoDb) UpdateOneWithFiled(cloName string, document map[string]interface{}, filterKey string) error {
+	ctx, cancel := NewContextDEfault()
+	defer cancel()
+	if len(filterKey) == 0 || filterKey == "" {
+		return errors.New("UpdateOne Must has more than one filterKey")
+	}
+	if value, ok := document[filterKey]; ok {
+		filter := bson.D{{filterKey, value}}
+		update := bson.D{{"$set", document}}
+		updateOpts := options.Update().SetUpsert(true)
+		_, err := db.db.Collection(cloName).UpdateOne(ctx, filter, update, updateOpts)
+		return err
+	} else {
+		return errors.New("No value of the filterKey ")
+	}
 }
 
 func (db *MongoDb) UpdateOrInsertOneWithKeys(colName string, document Col, filterKeys []string) error {
@@ -59,7 +78,7 @@ func (db *MongoDb) UpdateOrInsertOneWithKeys(colName string, document Col, filte
 	return err
 }
 
-// document 是实现Col的列表数据// 或者map
+// document
 func (db *MongoDb) InsertMany(colName string, document []Col) ([]string, error) {
 	ctx, cancel := NewContextDEfault()
 	defer cancel()
@@ -87,7 +106,7 @@ func (db *MongoDb) InsertMany(colName string, document []Col) ([]string, error) 
 
 /**
  */
-func (db *MongoDb) UpdateOrInsertMany(colName string, filterKey string,  document []Col) error {
+func (db *MongoDb) UpdateOrInsertMany(colName string, filterKey string, document []Col) error {
 	ctx, cancel := NewContextDEfault()
 	defer cancel()
 	if len(filterKey) == 0 {

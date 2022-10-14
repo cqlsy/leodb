@@ -1,10 +1,10 @@
 package leodb
 
 import (
-	"github.com/cqlsy/leoconfig"
-	"github.com/cqlsy/leodb/config"
+	conf "github.com/cqlsy/leodb/config"
 	"github.com/cqlsy/leodb/mog"
 	"github.com/cqlsy/leodb/sql"
+	"github.com/cqlsy/leoutil"
 	"strings"
 )
 
@@ -14,19 +14,19 @@ type Db struct {
 }
 
 func InitDataBase(path string) *Db {
-	Conf := new(config.Info)
-	leoconfig.ParseConf(path, &Conf)
-	if Conf == nil {
+	config := new(conf.DBConf)
+	leoutil.ParseConf(path, &config)
+	if config == nil {
 		panic("Please finish config set")
 	}
 	db := new(Db)
-	if strings.ToUpper(Conf.Db.Protocol) == "MONGODB" {
-		mon, err := mog.Connect(Conf)
+	if strings.ToUpper(config.Protocol) == "MONGODB" {
+		mon, err := mog.Connect(config)
 		if err != nil {
 			panic("connect mongo database err： " + err.Error())
 		}
 		db.MogDb = mon
-	} else if strings.ToUpper(Conf.Db.Protocol) == "MYSQL" {
+	} else if strings.ToUpper(config.Protocol) == "MYSQL" {
 
 	}
 	return db

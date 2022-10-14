@@ -1,10 +1,6 @@
-package config
+package conf
 
-type Info struct {
-	Db db
-}
-
-type db struct {
+type DBConf struct {
 	Host        string
 	Db          string
 	Port        string
