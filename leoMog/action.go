@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"time"
 )
 
 func (db *MongoDb) InsertOne(colName string, document Col) (string, error) {
@@ -208,6 +209,50 @@ func (db *MongoDb) FindMany(
 ) error {
 	//println(skip, limit)
 	ctx, cancel := NewContextDEfault()
+	defer cancel()
+	sort := bson.D{}
+	if sortMap != nil && len(sortMap) > 0 {
+		for key, value := range sortMap {
+			sort = append(sort, bson.E{Key: key, Value: value})
+		}
+	}
+	findOptions := options.Find()
+	findOptions.SetSort(sort)
+	findOptions.SetSkip(skip)
+	findOptions.SetLimit(limit)
+	if projects != nil && len(projects) > 0 {
+		project := bson.D{}
+		for _, value := range projects {
+			project = append(project, bson.E{Key: value, Value: 1})
+		}
+		findOptions.SetProjection(project)
+	}
+	f := bson.D{}
+	if filter != nil {
+		f = filter.value
+	}
+	c, err := db.db.Collection(colName).Find(ctx, f, findOptions)
+	if c == nil || err != nil {
+		return err
+	}
+	err = c.All(ctx, result)
+	if err != nil {
+		return err
+	}
+	return err
+}
+
+func (db *MongoDb) FindManyWithContext(
+	result interface{},
+	colName string,
+	projects []string,
+	sortMap map[string]int,
+	filter *Filter,
+	skip int64, limit int64,
+	timeOutSecond time.Duration,
+) error {
+	//println(skip, limit)
+	ctx, cancel := NewContext(timeOutSecond)
 	defer cancel()
 	sort := bson.D{}
 	if sortMap != nil && len(sortMap) > 0 {
